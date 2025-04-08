@@ -15,6 +15,19 @@
         新增
       </button>
     </div>
+    
+    <div v-if="filteredSuggestions.length > 0" class="mt-2">
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+        <div
+          v-for="suggestion in filteredSuggestions.slice(0, 5)"
+          :key="suggestion"
+          @click="selectSuggestion(suggestion)"
+          class="p-2 bg-white rounded-lg shadow hover:bg-gray-100 cursor-pointer text-center"
+        >
+          {{ suggestion }}
+        </div>
+      </div>
+    </div>
     <div class="mb-4 flex justify-end">
       <select
         v-model="sortBy"
@@ -25,17 +38,6 @@
         <option value="date">依入庫日排序</option>
       </select>
     </div>
-    <ul v-if="filteredSuggestions.length > 0" class="mt-2 bg-white rounded-lg shadow">
-      <li
-        v-for="suggestion in filteredSuggestions"
-        :key="suggestion"
-        @click="selectSuggestion(suggestion)"
-        class="p-2 hover:bg-gray-100 cursor-pointer"
-      >
-        {{ suggestion }}
-      </li>
-    </ul>
-
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       <FoodItem
         v-for="item in sortedFoodItems"
