@@ -48,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import FoodItem from '../components/FoodItem.vue'
 
 interface FoodItem {
@@ -65,7 +65,25 @@ const props = defineProps<{
 }>()
 
 const searchQuery = ref('')
-const foodItems = ref<FoodItem[]>([])
+
+// 使用 localStorage 來儲存不同類型的食材
+const getStoredItems = (type: 'fresh' | 'frozen'): FoodItem[] => {
+  const stored = localStorage.getItem(`foodItems_${type}`)
+  return stored ? JSON.parse(stored) : []
+}
+
+const foodItems = ref<FoodItem[]>(getStoredItems(props.type))
+
+// 儲存食材到 localStorage
+const saveItems = (items: FoodItem[], type: 'fresh' | 'frozen') => {
+  localStorage.setItem(`foodItems_${type}`, JSON.stringify(items))
+}
+
+// 監聽 type 變化，切換顯示的食材
+watch(() => props.type, (newType) => {
+  foodItems.value = getStoredItems(newType)
+})
+
 const suggestions = ref([
   '牛奶',
   '雞蛋',
@@ -115,11 +133,13 @@ const selectSuggestion = (suggestion: string) => {
     isExpanded: false
   }
   foodItems.value.push(newItem)
+  saveItems(foodItems.value, props.type)
   searchQuery.value = ''
 }
 
 const removeItem = (id: string) => {
   foodItems.value = foodItems.value.filter(item => item.id !== id)
+  saveItems(foodItems.value, props.type)
 }
 
 const addNewItem = () => {
@@ -132,6 +152,7 @@ const addNewItem = () => {
       isExpanded: false
     }
     foodItems.value.push(newItem)
+    saveItems(foodItems.value, props.type)
     searchQuery.value = ''
   }
 }
