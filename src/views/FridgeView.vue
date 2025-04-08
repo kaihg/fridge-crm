@@ -50,95 +50,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import FoodItem from '../components/FoodItem.vue'
-
-interface FoodItem {
-  id: string
-  name: string
-  category: string
-  storageDate: string
-  brand?: string
-  isExpanded: boolean
-}
+import { useFoodStore } from '../stores/foodStore'
 
 const props = defineProps<{
   type: 'fresh' | 'frozen'
 }>()
 
 const searchQuery = ref('')
-
-// 使用 localStorage 來儲存不同類型的食材
-const getStoredItems = (type: 'fresh' | 'frozen'): FoodItem[] => {
-  const stored = localStorage.getItem(`foodItems_${type}`)
-  return stored ? JSON.parse(stored) : []
-}
-
-const foodItems = ref<FoodItem[]>(getStoredItems(props.type))
-
-// 儲存食材到 localStorage
-const saveItems = (items: FoodItem[], type: 'fresh' | 'frozen') => {
-  localStorage.setItem(`foodItems_${type}`, JSON.stringify(items))
-}
-
-// 冷藏和冷凍的建議食材分開
-const suggestions = {
-  fresh: [
-    '牛奶',
-    '雞蛋',
-    '蔬菜',
-    '水果',
-    '優格',
-    '起司',
-    '豆腐',
-    '豆漿'
-  ],
-  frozen: [
-    '冷凍水餃',
-    '冷凍蔬菜',
-    '冷凍肉片',
-    '冷凍海鮮',
-    '冰淇淋',
-    '冷凍披薩',
-    '冷凍薯條',
-    '冷凍包子'
-  ]
-}
-
-// 儲存手動輸入的食材
-const manualInputs = ref<{ [key: string]: string[] }>({
-  fresh: [],
-  frozen: []
-})
-
 const sortBy = ref<'default' | 'name' | 'date'>('default')
 
+const foodStore = ref(useFoodStore(props.type))
+
 const filteredSuggestions = computed(() => {
-  const currentType = props.type
-  const allSuggestions = [...manualInputs.value[currentType], ...suggestions[currentType]]
-  
-  return allSuggestions
-    .filter(suggestion =>
-      suggestion.toLowerCase().includes(searchQuery.value.toLowerCase())
-    )
-    .slice(0, 5)
+  return foodStore.value.getFilteredSuggestions(searchQuery.value)
 })
 
 const sortedFoodItems = computed(() => {
-  return [...foodItems.value].sort((a, b) => {
-    if (sortBy.value === 'name') {
-      return a.name.localeCompare(b.name, 'zh-TW')
-    } else if (sortBy.value === 'date') {
-      return new Date(b.storageDate).getTime() - new Date(a.storageDate).getTime()
-    } else {
-      // 預設排序：先依名稱，名稱相同時依入庫日（最舊的排前面）
-      const nameCompare = a.name.localeCompare(b.name, 'zh-TW')
-      if (nameCompare === 0) {
-        return new Date(a.storageDate).getTime() - new Date(b.storageDate).getTime()
-      }
-      return nameCompare
-    }
-  })
+  return foodStore.value.getSortedItems(sortBy.value)
 })
 
 const filterSuggestions = () => {
@@ -146,59 +76,23 @@ const filterSuggestions = () => {
 }
 
 const selectSuggestion = (suggestion: string) => {
-  const newItem: FoodItem = {
-    id: Date.now().toString(),
-    name: suggestion,
-    category: '未分類',
-    storageDate: new Date().toISOString().split('T')[0],
-    isExpanded: false
-  }
-  foodItems.value.push(newItem)
-  saveItems(foodItems.value, props.type)
+  foodStore.value.addItem(suggestion)
   searchQuery.value = ''
 }
 
 const removeItem = (id: string) => {
-  foodItems.value = foodItems.value.filter(item => item.id !== id)
-  saveItems(foodItems.value, props.type)
+  foodStore.value.removeItem(id)
 }
 
 const addNewItem = () => {
   if (searchQuery.value.trim()) {
-    const newItem: FoodItem = {
-      id: Date.now().toString(),
-      name: searchQuery.value,
-      category: '未分類',
-      storageDate: new Date().toISOString().split('T')[0],
-      isExpanded: false
-    }
-    foodItems.value.push(newItem)
-    saveItems(foodItems.value, props.type)
-    
-    // 將手動輸入的食材加入建議清單
-    if (!manualInputs.value[props.type].includes(searchQuery.value)) {
-      manualInputs.value[props.type].push(searchQuery.value)
-      localStorage.setItem(`manualInputs_${props.type}`, JSON.stringify(manualInputs.value[props.type]))
-    }
-    
+    foodStore.value.addItem(searchQuery.value)
     searchQuery.value = ''
   }
 }
 
-// 初始化時載入手動輸入的食材
-onMounted(() => {
-  const storedManualInputs = localStorage.getItem(`manualInputs_${props.type}`)
-  if (storedManualInputs) {
-    manualInputs.value[props.type] = JSON.parse(storedManualInputs)
-  }
-})
-
 // 監聽 type 變化，切換顯示的食材
 watch(() => props.type, (newType) => {
-  foodItems.value = getStoredItems(newType)
-  const storedManualInputs = localStorage.getItem(`manualInputs_${newType}`)
-  if (storedManualInputs) {
-    manualInputs.value[newType] = JSON.parse(storedManualInputs)
-  }
+  foodStore.value = useFoodStore(newType)
 })
 </script> 
