@@ -1,24 +1,30 @@
 <template>
   <div>
-    <div class="mb-6">
+    <div class="mb-6 flex gap-2">
       <input
         type="text"
         v-model="searchQuery"
         @input="filterSuggestions"
-        class="w-full p-2 border rounded-lg"
+        class="flex-1 p-2 border rounded-lg"
         placeholder="輸入食材名稱..."
       />
-      <ul v-if="filteredSuggestions.length > 0" class="mt-2 bg-white rounded-lg shadow">
-        <li
-          v-for="suggestion in filteredSuggestions"
-          :key="suggestion"
-          @click="selectSuggestion(suggestion)"
-          class="p-2 hover:bg-gray-100 cursor-pointer"
-        >
-          {{ suggestion }}
-        </li>
-      </ul>
+      <button
+        @click="addNewItem"
+        class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+      >
+        新增
+      </button>
     </div>
+    <ul v-if="filteredSuggestions.length > 0" class="mt-2 bg-white rounded-lg shadow">
+      <li
+        v-for="suggestion in filteredSuggestions"
+        :key="suggestion"
+        @click="selectSuggestion(suggestion)"
+        class="p-2 hover:bg-gray-100 cursor-pointer"
+      >
+        {{ suggestion }}
+      </li>
+    </ul>
 
     <div class="space-y-4">
       <FoodItem
@@ -85,5 +91,19 @@ const selectSuggestion = (suggestion: string) => {
 
 const removeItem = (id: string) => {
   foodItems.value = foodItems.value.filter(item => item.id !== id)
+}
+
+const addNewItem = () => {
+  if (searchQuery.value.trim()) {
+    const newItem: FoodItem = {
+      id: Date.now().toString(),
+      name: searchQuery.value,
+      category: '未分類',
+      storageDate: new Date().toISOString().split('T')[0],
+      isExpanded: false
+    }
+    foodItems.value.push(newItem)
+    searchQuery.value = ''
+  }
 }
 </script> 
