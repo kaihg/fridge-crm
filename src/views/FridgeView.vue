@@ -19,7 +19,7 @@
     <div v-if="filteredSuggestions.length > 0" class="mt-2">
       <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
         <div
-          v-for="suggestion in filteredSuggestions.slice(0, 5)"
+          v-for="suggestion in filteredSuggestions"
           :key="suggestion"
           @click="selectSuggestion(suggestion)"
           class="p-2 bg-white rounded-lg shadow hover:bg-gray-100 cursor-pointer text-center"
@@ -50,7 +50,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import FoodItem from '../components/FoodItem.vue'
 
 interface FoodItem {
@@ -81,28 +81,47 @@ const saveItems = (items: FoodItem[], type: 'fresh' | 'frozen') => {
   localStorage.setItem(`foodItems_${type}`, JSON.stringify(items))
 }
 
-// 監聽 type 變化，切換顯示的食材
-watch(() => props.type, (newType) => {
-  foodItems.value = getStoredItems(newType)
-})
+// 冷藏和冷凍的建議食材分開
+const suggestions = {
+  fresh: [
+    '牛奶',
+    '雞蛋',
+    '蔬菜',
+    '水果',
+    '優格',
+    '起司',
+    '豆腐',
+    '豆漿'
+  ],
+  frozen: [
+    '冷凍水餃',
+    '冷凍蔬菜',
+    '冷凍肉片',
+    '冷凍海鮮',
+    '冰淇淋',
+    '冷凍披薩',
+    '冷凍薯條',
+    '冷凍包子'
+  ]
+}
 
-const suggestions = ref([
-  '牛奶',
-  '雞蛋',
-  '牛肉',
-  '豬肉',
-  '蔬菜',
-  '水果',
-  '起司',
-  '優格'
-])
+// 儲存手動輸入的食材
+const manualInputs = ref<{ [key: string]: string[] }>({
+  fresh: [],
+  frozen: []
+})
 
 const sortBy = ref<'default' | 'name' | 'date'>('default')
 
 const filteredSuggestions = computed(() => {
-  return suggestions.value.filter(suggestion =>
-    suggestion.toLowerCase().includes(searchQuery.value.toLowerCase())
-  )
+  const currentType = props.type
+  const allSuggestions = [...manualInputs.value[currentType], ...suggestions[currentType]]
+  
+  return allSuggestions
+    .filter(suggestion =>
+      suggestion.toLowerCase().includes(searchQuery.value.toLowerCase())
+    )
+    .slice(0, 5)
 })
 
 const sortedFoodItems = computed(() => {
@@ -155,7 +174,31 @@ const addNewItem = () => {
     }
     foodItems.value.push(newItem)
     saveItems(foodItems.value, props.type)
+    
+    // 將手動輸入的食材加入建議清單
+    if (!manualInputs.value[props.type].includes(searchQuery.value)) {
+      manualInputs.value[props.type].push(searchQuery.value)
+      localStorage.setItem(`manualInputs_${props.type}`, JSON.stringify(manualInputs.value[props.type]))
+    }
+    
     searchQuery.value = ''
   }
 }
+
+// 初始化時載入手動輸入的食材
+onMounted(() => {
+  const storedManualInputs = localStorage.getItem(`manualInputs_${props.type}`)
+  if (storedManualInputs) {
+    manualInputs.value[props.type] = JSON.parse(storedManualInputs)
+  }
+})
+
+// 監聽 type 變化，切換顯示的食材
+watch(() => props.type, (newType) => {
+  foodItems.value = getStoredItems(newType)
+  const storedManualInputs = localStorage.getItem(`manualInputs_${newType}`)
+  if (storedManualInputs) {
+    manualInputs.value[newType] = JSON.parse(storedManualInputs)
+  }
+})
 </script> 
