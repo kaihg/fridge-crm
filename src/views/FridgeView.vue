@@ -15,6 +15,16 @@
         新增
       </button>
     </div>
+    <div class="mb-4 flex justify-end">
+      <select
+        v-model="sortBy"
+        class="p-2 border rounded-lg"
+      >
+        <option value="default">預設</option>
+        <option value="name">依名稱排序</option>
+        <option value="date">依入庫日排序</option>
+      </select>
+    </div>
     <ul v-if="filteredSuggestions.length > 0" class="mt-2 bg-white rounded-lg shadow">
       <li
         v-for="suggestion in filteredSuggestions"
@@ -28,7 +38,7 @@
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       <FoodItem
-        v-for="item in foodItems"
+        v-for="item in sortedFoodItems"
         :key="item.id"
         :item="item"
         @remove="removeItem"
@@ -67,10 +77,29 @@ const suggestions = ref([
   '優格'
 ])
 
+const sortBy = ref<'default' | 'name' | 'date'>('default')
+
 const filteredSuggestions = computed(() => {
   return suggestions.value.filter(suggestion =>
     suggestion.toLowerCase().includes(searchQuery.value.toLowerCase())
   )
+})
+
+const sortedFoodItems = computed(() => {
+  return [...foodItems.value].sort((a, b) => {
+    if (sortBy.value === 'name') {
+      return a.name.localeCompare(b.name, 'zh-TW')
+    } else if (sortBy.value === 'date') {
+      return new Date(b.storageDate).getTime() - new Date(a.storageDate).getTime()
+    } else {
+      // 預設排序：先依名稱，名稱相同時依入庫日（最舊的排前面）
+      const nameCompare = a.name.localeCompare(b.name, 'zh-TW')
+      if (nameCompare === 0) {
+        return new Date(a.storageDate).getTime() - new Date(b.storageDate).getTime()
+      }
+      return nameCompare
+    }
+  })
 })
 
 const filterSuggestions = () => {
