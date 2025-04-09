@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/fridge-crm/sw.js', { scope: '/fridge-crm/' })})}
