@@ -7,25 +7,25 @@ const router = createRouter({
   history: createWebHistory(),
   routes: [
     {
-      path: '/fridge/:type',
+      path: '/fridge-crm/:type',
       name: 'fridge',
       component: FridgeView,
       props: true
     },
     {
-      path: '/recipes',
+      path: '/fridge-crm/recipes',
       name: 'recipes',
       component: RecipesView
     },
     {
-      path: '/recipes/:id',
+      path: '/fridge-crm/recipes/:id',
       name: 'recipe-detail',
       component: RecipeDetailView,
       props: true
     },
     {
       path: '/',
-      redirect: '/fridge/fresh'
+      redirect: '/fridge-crm/fresh'
     }
   ]
 })

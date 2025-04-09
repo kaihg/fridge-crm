@@ -2,9 +2,9 @@
 import { ref } from 'vue'
 
 const tabs = ref([
-  { name: '冷藏', path: '/fridge/fresh' },
-  { name: '冷凍', path: '/fridge/frozen' },
-  { name: '食譜推薦', path: '/recipes' }
+  { name: '冷藏', path: '/fridge-crm/fresh' },
+  { name: '冷凍', path: '/fridge-crm/frozen' },
+  { name: '食譜推薦', path: '/fridge-crm/recipes' }
 ])
 </script>
 
