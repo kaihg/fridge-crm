@@ -2,7 +2,7 @@
   <div
     class="bg-white rounded-lg shadow p-4 cursor-pointer"
     @click="toggleExpand"
-    @dblclick="$emit('remove', item.id)"
+    @dblclick="emit('remove', item.id)"
   >
     <div class="flex justify-between items-center">
       <h3 class="text-lg font-medium">{{ item.name }}</h3>
@@ -17,8 +17,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-
 interface FoodItem {
   id: string
   name: string
